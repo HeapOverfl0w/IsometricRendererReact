@@ -2,6 +2,7 @@ import { Renderer } from './renderer';
 import { Camera } from './camera';
 import { Tile } from './tile';
 import { Level } from './level';
+import { CAMERA_ZOOM, CAMERA_X, CAMERA_Y } from './constants'
 
 export class Main {
     constructor(ctx, data) {
@@ -10,8 +11,9 @@ export class Main {
 
         this.renderer = new Renderer();
         this.camera = new Camera();
-        this.camera.x = 25;
-        this.camera.y = 25;
+        this.camera.x = CAMERA_X;
+        this.camera.y = CAMERA_Y;
+        this.camera.zoom = CAMERA_ZOOM;
 
         this.mouseX = 0;
         this.mouseY = 0;
@@ -52,13 +54,8 @@ export class Main {
         this.mouseY = Math.floor(mouseY);
     }
 
-    handleMouseWheel(deltaY) {
-        let delta = 1;
-        if (deltaY < 0) {
-            delta = -1;
-        }
-
-        this.camera.zoom += delta;
+    handleMouseWheel(zoomDiff) {
+        this.camera.zoom = CAMERA_ZOOM + zoomDiff;
     }
 
     handleMouseClick() {
