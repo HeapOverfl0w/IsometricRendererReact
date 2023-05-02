@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from "react";
+import { CANVAS_HEIGHT, CANVAS_WIDTH } from "../game/constants";
 import { Data } from '../game/data';
 import { Main } from '../game/main';
 
@@ -34,7 +35,10 @@ export function Canvas(props) {
 
     useEffect(() => {
         if (main !== undefined && props.center.x !== undefined && props.center.y !== undefined) {
-            main.handleMouseClick(props.zoom);
+            var xDist = props.center.x - canvasRef.current.clientWidth / 2;
+            var yDist = canvasRef.current.clientHeight / 2 - props.center.y;
+
+            main.handleMouseClick(xDist, yDist);
         }
     }, [props.center]);
 
@@ -42,7 +46,7 @@ export function Canvas(props) {
         <div>
             <canvas style={{ width: window.innerWidth + 'px', height: window.innerHeight + 'px' }}
                 id='scene' ref={canvasRef}
-                width='640' height='400'
+                width={CANVAS_WIDTH} height={CANVAS_HEIGHT}
             ></canvas>
         </div>
     )

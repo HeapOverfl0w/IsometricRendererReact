@@ -5,6 +5,8 @@ import { createUseStyles } from 'react-jss';
 const useStyles = createUseStyles(
   {
     root: {
+      position: 'absolute',
+      zIndex: '2'
     }
   },
   {
@@ -30,7 +32,7 @@ export default function TowerSpeedDial(props) {
   ];
 
   return (
-    <div>
+    <div className={classes.root}>
       <SpeedDial direction='right' ariaLabel="speedDial">
         {actions.map((action) => (
           <SpeedDialAction

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Grid } from '@mui/material';
 import { createUseStyles } from 'react-jss';
-import { CAMERA_X, CAMERA_Y, CAMERA_ZOOM, TILE_HEIGHT, TILE_WIDTH } from '../game/constants';
+import { CAMERA_X, CAMERA_Y, CAMERA_ZOOM, TILE_HEIGHT_OFFSET_RATIO } from '../game/constants';
 
 const useStyles = createUseStyles(
   {
@@ -39,30 +39,109 @@ const useStyles = createUseStyles(
 
 export default function MapGrid(props) {
   const classes = useStyles();
-  const scale = (window.innerWidth / (CAMERA_ZOOM + props.zoom)) / (window.innerWidth/100) - 1.41;
+  const width = window.innerWidth / (CAMERA_ZOOM + props.zoom);
+  var height = window.innerHeight / (CAMERA_ZOOM + props.zoom);
+  height = height - (TILE_HEIGHT_OFFSET_RATIO * height);
+  const tileSize = Math.sqrt((Math.pow(width / 2, 2) + Math.pow(height / 2, 2)));
+  const rotation = 2 * Math.PI - Math.atan(height/width); //335.2//
+  const skew = Math.PI / 2 - Math.atan(height/width) * 2; //40.4//
+
+  const [xCenter, setXCenter] = useState(CAMERA_X);
+  const [yCenter, setYCenter] = useState(CAMERA_Y);
   const [valid, setValid] = useState(false);
 
   const handleEnter = () => {
     setValid(Math.random() > 0.5);
   }
 
-  const Cells = React.memo(() => {
-    return (
-      Array.from(Array(10000)).map((_, index) => (
-        <Grid xs={1} item key={index}>
-          <div className={valid ? classes.valid : classes.invalid} onMouseEnter={() => handleEnter()}></div>
-        </Grid>
-      ))
-    );
-  })
+  useEffect(() => {
+    if (props.center.x && props.center.y) {
+      const canvasTan = window.innerHeight / window.innerWidth;
+      const canvasAngle = Math.atan(canvasTan);
+      const adjustedCanvasAngle = Math.PI / 2 - canvasAngle;
+
+      const xDiff = (props.center.x - window.innerWidth / 2);
+      const yDiff = (window.innerHeight / 2 - props.center.y);
+      let angle = 0;
+
+      if (yDiff === 0) {
+        if (xDiff < 0) {
+          angle = Math.PI + Math.PI / 2;
+        }
+        else {
+          angle = Math.PI / 2;
+        }
+      }
+      else if (xDiff === 0) {
+        if (yDiff < 0) {
+          angle = Math.PI;
+        }
+      }
+      else {
+        angle = Math.atan2(Math.abs(yDiff), Math.abs(xDiff));
+
+        if (xDiff > 0 && yDiff > 0) {
+          angle = Math.PI / 2 - angle;
+        }
+        else if (xDiff > 0 && yDiff < 0) {
+          angle += Math.PI / 2;
+        }
+        else if (xDiff < 0 && yDiff < 0) {
+          angle = Math.PI + (Math.PI / 2 - angle);
+        }
+        else {
+          angle += Math.PI + Math.PI / 2
+        }
+      }
+
+      const hypo = Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff, 2));
+
+      let adjustedAngle = angle - adjustedCanvasAngle;
+      adjustedAngle = angle >= adjustedCanvasAngle ? adjustedAngle : adjustedAngle + 2 * Math.PI;
+
+      if (adjustedAngle <= 2 * canvasAngle) {
+        adjustedAngle = adjustedAngle * ((Math.PI / 2) / (2 * canvasAngle));
+      }
+      else {
+        let adjustment = Math.PI / 2;
+        if (adjustedAngle <= Math.PI) {
+          adjustment += (adjustedAngle - 2 * canvasAngle) * ((Math.PI / 2) / (2 * adjustedCanvasAngle));
+        }
+        else {
+          adjustment = Math.PI;
+          if (adjustedAngle <= 2 * canvasAngle + Math.PI) {
+            adjustment += (adjustedAngle - Math.PI) * ((Math.PI / 2) / (2 * canvasAngle));
+          }
+          else {
+            adjustment = Math.PI + Math.PI / 2 + (adjustedAngle - (Math.PI + Math.PI / 2)) * ((Math.PI / 2) / (2 * adjustedCanvasAngle));
+          }
+        }
+        adjustedAngle = adjustment;
+      }
+
+      const xPrime = Math.cos(adjustedAngle) * hypo;
+      const yPrime = Math.sin(adjustedAngle) * hypo;
+      const tileX = xPrime > 0 ?
+        Math.floor(xPrime / tileSize) :
+        Math.ceil(xPrime / tileSize);
+      const tileY = yPrime > 0 ?
+        Math.floor(yPrime / tileSize) :
+        Math.ceil(yPrime / tileSize);
+
+      setXCenter(xCenter + tileX);
+      setYCenter(yCenter + tileY);
+    }
+  }, [props.center]);
 
   return (
-    <div style={{ display: 'block', position: 'absolute', width: 'inherit', height: 'inherit' }}>
-      <div style={props.visible ? { display: 'block', position: 'relative', width: 'inherit', height: 'inherit', overflow: 'hidden' } : { display: 'none' }}>
-        <Grid container spacing={0} columns={{ xs: 100 }} style={{ 
-          width: window.innerWidth + 'px', 
-          height: window.innerHeight + 'px', 
-          transform: `rotate(24.8deg) skewX(319.5deg) translateX(${((CAMERA_ZOOM + props.zoom)-(props.center.x ? props.center.x/TILE_WIDTH : CAMERA_X))*4*(scale)*(window.innerWidth/100)+TILE_HEIGHT}px) translateY(${((props.center.y ? props.center.y/TILE_HEIGHT : CAMERA_Y)-(CAMERA_ZOOM + props.zoom))*4*(scale)*(window.innerHeight/100)-TILE_WIDTH}px) scale(${scale})`}}>
+    <div style={{ display: 'block', position: 'absolute', width: `${window.innerWidth}px`, height: `${window.innerHeight}px`, overflow: 'hidden' }}>
+      <div style={props.visible ? { display: 'block', position: 'relative', width: 'inherit', height: 'inherit', transform: `translateX(${window.innerWidth/2}px) translateY(${425}px)` } : { display: 'none' }}>
+        <Grid container spacing={0} columns={{ xs: 100 }} style={{
+          width: (tileSize * 100) + 'px',
+          height: (tileSize * 100) + 'px',
+          transformOrigin: 'top left',
+          transform: `rotate(${rotation * 180 / Math.PI}deg) skewX(${skew * 180 / Math.PI}deg) scaleY(${Math.cos(skew)}) translateX(${-xCenter * tileSize}px) translateY(${-yCenter * tileSize}px)`
+        }}>
           {
             Array.from(Array(10000)).map((_, index) => (
               <Grid xs={1} item key={index}>

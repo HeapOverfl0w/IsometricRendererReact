@@ -31,17 +31,21 @@ function App() {
 
     }
     else {
-      setCenter({ x: event.clientX, y: event.clientY })
+      setCenter(
+        { 
+          x: event.pageX - (event.currentTarget.offsetLeft), 
+          y: event.pageY - (event.currentTarget.offsetTop) 
+        })
     }
   }
 
   return (
     <div onClick={() => handleClick()} >
       <TowerSpeedDial onClick={(tower) => handleClick(tower)}></TowerSpeedDial>
-      <div style={{ height: '640px', width: '640px', overflow: 'hidden' }}
+      <div style={{ overflow: 'hidden' }}
         onMouseLeave={() => setPosition({ x: undefined, y: undefined })}
-        onMouseEnter={(event) => setPosition({ x: event.clientX, y: event.clientY })}
-        onMouseMove={(event) => setPosition({ x: event.clientX, y: event.clientY })}
+        onMouseEnter={(event) => setPosition({ x: event.pageX - (event.currentTarget.offsetLeft), y: event.pageY - (event.currentTarget.offsetTop)  })}
+        onMouseMove={(event) => setPosition({ x: event.pageX - (event.currentTarget.offsetLeft), y: event.pageY - (event.currentTarget.offsetTop)  })}
         onWheel={(event) => handleMouseWheel(event.deltaY)}
         onMouseUp={(event) => handleMouseUp(event)}>
         <MapGrid visible={tower} zoom={zoom} center={center}></MapGrid>
