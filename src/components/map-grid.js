@@ -43,8 +43,8 @@ export default function MapGrid(props) {
   var height = window.innerHeight / (CAMERA_ZOOM + props.zoom);
   height = height - (TILE_HEIGHT_OFFSET_RATIO * height);
   const tileSize = Math.sqrt((Math.pow(width / 2, 2) + Math.pow(height / 2, 2)));
-  const rotation = 2 * Math.PI - Math.atan(height/width); //335.2//
-  const skew = Math.PI / 2 - Math.atan(height/width) * 2; //40.4//
+  const rotation = 2 * Math.PI - Math.atan(height / width); //335.2//
+  const skew = Math.PI / 2 - Math.atan(height / width) * 2; //40.4//
 
   const [xCenter, setXCenter] = useState(CAMERA_X);
   const [yCenter, setYCenter] = useState(CAMERA_Y);
@@ -135,22 +135,39 @@ export default function MapGrid(props) {
 
   return (
     <div style={{ display: 'block', position: 'absolute', width: `${window.innerWidth}px`, height: `${window.innerHeight}px`, overflow: 'hidden' }}>
-      <div style={props.visible ? { display: 'block', position: 'relative', width: 'inherit', height: 'inherit', transform: `translateX(${window.innerWidth/2}px) translateY(${425}px)` } : { display: 'none' }}>
-        <Grid container spacing={0} columns={{ xs: 100 }} style={{
-          width: (tileSize * 100) + 'px',
-          height: (tileSize * 100) + 'px',
-          transformOrigin: 'top left',
+      <div style={props.visible ? { display: 'block', position: 'relative', width: 'inherit', height: 'inherit', transform: `translateX(${window.innerWidth / 2}px) translateY(${425}px)` } : { display: 'none' }}>
+        <div style={{
+          width: (tileSize * 100) + 'px', height: (tileSize * 100) + 'px', transformOrigin: 'top left',
           transform: `rotate(${rotation * 180 / Math.PI}deg) skewX(${skew * 180 / Math.PI}deg) scaleY(${Math.cos(skew)}) translateX(${-xCenter * tileSize}px) translateY(${-yCenter * tileSize}px)`
         }}>
-          {
-            Array.from(Array(10000)).map((_, index) => (
-              <Grid xs={1} item key={index}>
-                <div className={valid ? classes.valid : classes.invalid} onMouseEnter={() => handleEnter()}></div>
-              </Grid>
-            ))
-          }
-        </Grid>
+          {Array.from(Array(100)).map((_, i) => (
+            <div style={{ display: 'flex', flexDirection: 'row' }}>
+              {Array.from(Array(100)).map((_, j) => (
+                <div key={i + '_' + j} style={{ width: `${tileSize}px`, height: `${tileSize}px` }}>
+                  <div className={valid ? classes.valid : classes.invalid}  onMouseEnter={() => handleEnter()}></div>
+                </div>
+              ))}
+            </div>
+          ))}
+
+        </div>
+
+
+        {/* <Grid container spacing={0} columns={{ xs: 100 }} style={{
+        //   width: (tileSize * 100) + 'px',
+        //   height: (tileSize * 100) + 'px',
+        //   transformOrigin: 'top left',
+        //   transform: `rotate(${rotation * 180 / Math.PI}deg) skewX(${skew * 180 / Math.PI}deg) scaleY(${Math.cos(skew)}) translateX(${-xCenter * tileSize}px) translateY(${-yCenter * tileSize}px)`
+        // }}>
+          // {
+          //   Array.from(Array(10000)).map((_, index) => (
+          //     <Grid xs={1} item key={index} style={{display: 'hidden'}}>
+          //       <div className={valid ? classes.valid : classes.invalid} onMouseEnter={() => handleEnter()}></div>
+          //     </Grid>
+          //   ))
+          // 
+      </Grid>*/}
       </div>
-    </div>
+    </div >
   )
 }
